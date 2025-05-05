@@ -1,0 +1,15 @@
+{
+  "originHash" : "be2392f054a55afaaceb44a93ebcb7971efc5f67e72a1b7d27fb62c3a714cc73",
+  "pins" : [
+    {
+      "identity" : "pianokeyboard",
+      "kind" : "remoteSourceControl",
+      "location" : "git@github.com:evan-templeton/PianoKeyboard.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "a91f95d27e9c67c2be16a707d5d142c035e5e325"
+      }
+    }
+  ],
+  "version" : 3
+}
