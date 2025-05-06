@@ -23,7 +23,6 @@ export class PianoViewModel {
 
   handleKeyDown(key) {
     if (key === 'BACKSPACE') {
-      console.log('Backspace detected, removing last note');
       this.removeLastNote();
       return true;
     }
