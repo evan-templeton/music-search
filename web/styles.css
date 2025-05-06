@@ -85,6 +85,7 @@ body {
     border-radius: 4px;
     padding: 15px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-family: monospace;
 }
 
 #loading {
@@ -112,21 +113,18 @@ body {
 
 .result-title {
     font-weight: bold;
-    font-family: monospace;
     color: #333;
 }
 
 .result-artist {
     color: #666;
     font-size: 0.9em;
-    font-family: monospace;
     margin: 5px 0;
 }
 
 .result-score {
     color: #2196f3;
     font-size: 0.9em;
-    font-family: monospace;
 }
 
 .hidden {
