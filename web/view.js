@@ -6,13 +6,17 @@ export class PianoView {
     this.staffSVG = document.getElementById('staff');
     this.pianoKeys = document.getElementById('piano-keys');
     this.debugDisplay = document.getElementById('debug-display');
+    this.loadingElement = document.getElementById('loading');
+    this.errorElement = document.getElementById('error');
+    this.resultsElement = document.getElementById('results');
     
-    this.initializePiano();
-    this.drawStaff();
-    this.setupEventListeners();
+    this.#initializePiano();
+    this.#drawStaff();
+    this.#setupEventListeners();
+    this.#setupSearchResultsListener();
   }
 
-  initializePiano() {
+  #initializePiano() {
     // Calculate total width based on number of white keys
     const totalWidth = whiteNotes.length * whiteKeyWidth;
     this.pianoKeys.style.width = `${totalWidth}px`;
@@ -44,11 +48,10 @@ export class PianoView {
     });
   }
 
-  setupEventListeners() {
+  #setupEventListeners() {
     document.addEventListener('keydown', e => {
       const key = e.key.toUpperCase();
       if (this.viewModel.handleKeyDown(key)) {
-        // e.preventDefault();
         this.updateView();
       }
     });
@@ -61,7 +64,7 @@ export class PianoView {
     });
   }
 
-  drawStaff() {
+  #drawStaff() {
     this.staffSVG.innerHTML = '';
     // Draw the treble clef
     this.staffSVG.innerHTML = `
@@ -73,8 +76,8 @@ export class PianoView {
     }
   }
 
-  drawNotes() {
-    this.drawStaff();
+  #drawNotes() {
+    this.#drawStaff();
     const notes = this.viewModel.getNotes();
     
     notes.forEach((note, i) => {
@@ -95,19 +98,12 @@ export class PianoView {
     });
   }
 
-  updateDebugDisplay() {
+  #updateDebugDisplay() {
     const notes = this.viewModel.getNotes();
     this.debugDisplay.textContent = `Notes: [${notes.join(', ')}]`;
   }
 
-  updateView() {
-    this.drawNotes();
-    this.updateDebugDisplay();
-    
-    // Update piano key visuals
-    const notes = this.viewModel.getNotes();
-    const lastNote = notes[notes.length - 1];
-    
+  #updateKeys() {
     // Remove pressed class from all keys first
     Array.from(this.pianoKeys.querySelectorAll('div')).forEach(div => {
       div.classList.remove('pressed');
@@ -123,5 +119,52 @@ export class PianoView {
         }
       }
     });
+  }
+
+  #setupSearchResultsListener() {
+    this.viewModel.setOnSearchResultsUpdate((results) => {
+      if (this.viewModel.isSearching) {
+        this.loadingElement.classList.remove('hidden');
+        this.errorElement.classList.add('hidden');
+        this.resultsElement.innerHTML = '';
+      } else {
+        this.loadingElement.classList.add('hidden');
+        this.#updateSearchResults(results);
+      }
+    });
+  }
+
+  #updateSearchResults(results) {
+    if (!results) {
+      return;
+    }
+
+    // Display results
+    if (results.matches && results.matches.length > 0) {
+      const resultsHTML = results.matches.map(match => `
+        <div class="result-item">
+          <div class="result-title">${match.title}</div>
+          <div class="result-artist">${match.artist}</div>
+          <div class="result-score">Match: ${Math.round(match.matchScore * 100)}%</div>
+        </div>
+      `).join('');
+      
+      this.resultsElement.innerHTML = resultsHTML;
+    } else {
+      this.resultsElement.innerHTML = '<div class="result-item">No matches found</div>';
+    }
+  }
+
+  // Public methods
+  updateView() {
+    this.#drawNotes();
+    this.#updateDebugDisplay();
+    this.#updateKeys();
+  }
+
+  showError(message) {
+    this.loadingElement.classList.add('hidden');
+    this.errorElement.textContent = message;
+    this.errorElement.classList.remove('hidden');
   }
 } 
