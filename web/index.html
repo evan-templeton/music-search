@@ -4,174 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Piano Staff Webpage</title>
-  <style>
-    body { display: flex; flex-direction: column; justify-content: flex-end; height: 100vh; margin: 0; background: #f8f8f8; }
-    #staff-container { flex: 1; display: flex; align-items: flex-start; justify-content: center; margin-top: 40px; }
-    #piano-container { display: flex; justify-content: center; align-items: flex-end; margin-bottom: 40px; }
-    .white-key, .black-key { border: 1px solid #333; position: relative; }
-    .white-key { width: 40px; height: 180px; background: #fff; z-index: 1; }
-    .black-key { width: 28px; height: 110px; background: #222; position: absolute; z-index: 2; }
-    .key-label { position: absolute; bottom: 5px; left: 0; width: 100%; text-align: center; font-size: 14px; color: #333; }
-    .pressed { background: #aaf !important; }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <div id="debug-display">Notes: []</div>
   <div id="staff-container">
     <svg id="staff" width="560" height="120"></svg>
   </div>
   <div id="piano-container">
-    <div id="piano-keys" style="position:relative; width:320px; height:180px;"></div>
+    <div id="piano-keys"></div>
   </div>
-  <script>
-    // Piano and keyboard mapping
-    const notes = [
-      {name: 'C', key: 'A'},
-      {name: 'C#', key: 'W'},
-      {name: 'D', key: 'S'},
-      {name: 'D#', key: 'E'},
-      {name: 'E', key: 'D'},
-      {name: 'F', key: 'F'},
-      {name: 'F#', key: 'T'},
-      {name: 'G', key: 'G'},
-      {name: 'G#', key: 'Y'},
-      {name: 'A', key: 'H'},
-      {name: 'A#', key: 'U'},
-      {name: 'B', key: 'J'},
-      {name: 'C2', key: 'K'},
-      {name: 'C#2', key: 'O'},
-      {name: 'D2', key: 'L'},
-      {name: 'D#2', key: 'P'},
-      {name: 'E2', key: ';'},
-      {name: 'F2', key: "'"}
-    ];
-    const whiteNotes = ['C','D','E','F','G','A','B','C2','D2','E2','F2'];
-    const blackNotes = ['C#','D#','F#','G#','A#','C#2','D#2'];
-    const keyToNote = Object.fromEntries(notes.map(n => [n.key, n.name]));
-    const noteToKey = Object.fromEntries(notes.map(n => [n.name, n.key]));
+  <script type="module">
+    import { PianoViewModel } from './viewModel.js';
+    import { PianoView } from './view.js';
 
-    const whiteKeyWidth = 40;
-    const blackKeyWidth = 28;
-
-    // Draw piano
-    const pianoKeys = document.getElementById('piano-keys');
-    // Draw white keys
-    whiteNotes.forEach((note, i) => {
-      const keyDiv = document.createElement('div');
-      keyDiv.className = 'white-key';
-      keyDiv.style.position = 'absolute';
-      keyDiv.style.left = `${i * whiteKeyWidth}px`;
-      keyDiv.style.top = '0px';
-      keyDiv.dataset.note = note;
-      keyDiv.innerHTML = `<span class="key-label">${noteToKey[note]}</span>`;
-      pianoKeys.appendChild(keyDiv);
-    });
-    // Map for black key positions (index between white keys)
-    const blackKeyMap = {
-      'C#': 1,
-      'D#': 2,
-      'F#': 4,
-      'G#': 5,
-      'A#': 6,
-      'C#2': 8,
-      'D#2': 9
-    };
-    // Draw black keys
-    blackNotes.forEach(note => {
-      const i = blackKeyMap[note];
-      const blackDiv = document.createElement('div');
-      blackDiv.className = 'black-key';
-      blackDiv.style.position = 'absolute';
-      blackDiv.style.left = `${i * whiteKeyWidth - blackKeyWidth/2}px`;
-      blackDiv.style.top = '0px';
-      blackDiv.dataset.note = note;
-      blackDiv.innerHTML = `<span class="key-label" style="color:#fff;">${noteToKey[note]}</span>`;
-      pianoKeys.appendChild(blackDiv);
-    });
-
-    // Draw empty staff
-    const staffSVG = document.getElementById('staff');
-    function drawStaff() {
-      staffSVG.innerHTML = '';
-      for (let i = 0; i < 5; i++) {
-        staffSVG.innerHTML += `<line x1="20" y1="${30+i*16}" x2="540" y2="${30+i*16}" stroke="#222" stroke-width="2"/>`;
-      }
-    }
-    drawStaff();
-
-    // Note positions on staff (treble clef, C4 to C5)
-    const staffNoteY = {
-      'C': 110,   // C4 (ledger line below, further down)
-      'C#': 110,
-      'D': 102,    // space below
-      'D#': 102,
-      'E': 94,    // bottom line
-      'F': 86,    // bottom space
-      'F#': 86,
-      'G': 78,    // 2nd line
-      'G#': 78,
-      'A': 70,    // 2nd space
-      'A#': 70,
-      'B': 62,    // 3rd line
-      'C2': 54,   // 3rd space (C5)
-      'C#2': 54,
-      'D2': 46,   // 4th line
-      'D#2': 46,
-      'E2': 38,   // 4th space
-      'F2': 30    // 5th line (top)
-    };
-    let staffNotes = [];
-    function drawNotes() {
-      drawStaff();
-      staffNotes.forEach((note, i) => {
-        const x = 60 + i*40;
-        const y = staffNoteY[note];
-        // Draw sharp if note is a sharp
-        if (note.includes('#')) {
-          staffSVG.innerHTML += `<text x="${x-22}" y="${y+5}" font-size="22" font-family="serif">&#x266F;</text>`;
-        }
-        staffSVG.innerHTML += `<ellipse cx="${x}" cy="${y}" rx="12" ry="8" fill="#222"/>`;
-        // Ledger line for C and C#
-        if (note === 'C' || note === 'C#') {
-          staffSVG.innerHTML += `<line x1="${x-14}" y1="${y}" x2="${x+14}" y2="${y}" stroke="#222" stroke-width="2"/>`;
-        }
-      });
-    }
-
-    // Track which keys are currently pressed
-    const pressedKeys = new Set();
-
-    // Keyboard event handling
-    document.addEventListener('keydown', e => {
-      const key = e.key.toUpperCase();
-      if (key === 'BACKSPACE') {
-        staffNotes.pop();
-        drawNotes();
-        e.preventDefault();
-        return;
-      }
-      if (keyToNote[key] && !pressedKeys.has(key)) {
-        pressedKeys.add(key);
-        const note = keyToNote[key];
-        staffNotes.push(note);
-        drawNotes();
-        // Visual feedback on piano
-        const keyDiv = Array.from(document.querySelectorAll('#piano-keys > div')).find(div => div.dataset.note === note);
-        if (keyDiv) {
-          keyDiv.classList.add('pressed');
-        }
-      }
-    });
-    document.addEventListener('keyup', e => {
-      const key = e.key.toUpperCase();
-      if (keyToNote[key]) {
-        pressedKeys.delete(key);
-        const note = keyToNote[key];
-        const keyDiv = Array.from(document.querySelectorAll('#piano-keys > div')).find(div => div.dataset.note === note);
-        if (keyDiv) {
-          keyDiv.classList.remove('pressed');
-        }
-      }
-    });
+    // Initialize the application
+    const viewModel = new PianoViewModel();
+    const view = new PianoView(viewModel);
   </script>
 </body>
 </html> 
